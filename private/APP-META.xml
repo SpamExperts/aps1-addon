@@ -1,0 +1,370 @@
+<application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://apstandard.com/ns/1" version="1.2">
+    <id>spamexperts-integration</id>
+    <name>SpamExperts Integration</name>
+    <version>{VERSION}</version>
+    <release>{RELEASE}</release>
+    <homepage>http://www.spamexperts.com/</homepage>
+    <vendor>
+        <name>SpamExperts B.V.</name>
+        <homepage>http://www.spamexperts.com/</homepage>
+        <icon path="images/icon.png"/>
+    </vendor>
+    <packager>
+        <name>SpamExperts B.V.</name>
+        <homepage>http://www.spamexperts.com/</homepage>
+        <uri>uuid:7d652dbc-f2e9-463a-a658-b8a8369112ad</uri>
+    </packager>
+    <presentation>
+        <summary>The addon integrates domain creation/removal with SpamExperts and offers the enduser a one-click login option to manage the antispam settings for their domain/mail account. Usage of this addon requires a subscription to the SpamExperts Local/Hosted Cloud.</summary>
+        <description>Server-side anti-spam filter for all users of your domain; Proven, trusted, and secure; Best price/
+            quality anti-spam gateway on the market; Over 99.99% filtering accuracy; Easy to implement; Fully managed
+            service; Friendly multilevel support with 24/7/365 monitoring; No email ever gets lost
+        </description>
+        <icon path="images/icon.png"/>
+        <screenshot path="images/screenshot.png">
+            <description>Main application view</description>
+        </screenshot>
+        <changelog>
+            <version version="{VERSION}" release="{RELEASE}">
+                <entry>POA APS 1.2 [API]Returned errors: a:0:{} (#22207)</entry>
+                <entry>Unable to add domain APS when client has mutiple subscriptions (#21318)</entry>
+                <entry>PPA APS domains not removed (#20978)</entry>
+                <entry>SpamExpert integration with POA Parallels issues (#20847)</entry>
+                <entry>force lowercase on all SpamPanel calls APS POA (#19951)</entry>
+                <entry>unable to provision domain APS (#19466)</entry>
+                <entry>Delete domains from subscriptions (#18705)</entry>
+                <entry>APS1.x domain limits (#18478)</entry>
+                <entry>APS provisioning succeeds without MX record (#18402)</entry>
+                <entry>APS 1.x Domain added for the 2nd subscription but no failed task (#18477)</entry>
+                <entry>allow clients to update from old 1.7 version of POA to the lastest (#18640)</entry>
+                <entry>Drop IMAP requirement (#14951)</entry>
+                <entry>IDN domains failing to provision (#18496)</entry>
+                <entry>Force lowercase domains for POA when adding (#18360)</entry>
+                <entry>APS error: Application script structured output is not valid. Reason: 'Document not well-formed.' (#18268)</entry>
+                <entry>Move add-on installer to download server (#18180)</entry>
+                <entry>Fail the provisioning in case there are no mailservers (#14952)</entry>
+                <entry>[Plesk] Installation of SpamExpert failed (#17516)</entry>
+                <entry>APS setup failing incorrect request string APS Parallels automation addon (#17685)</entry>
+                <entry>Warning: implode(): Invalid arguments passed in /usr/local/prospamfilter/library/SpamFilter/ResellerAPI/Action.php on line 301 (#17388)</entry>
+                <entry>Do not throw a fatal error when an email address changes (#17032)</entry>
+                <entry>Domain values not always reported (#15922)</entry>
+                <entry>Compatibility with Exchange (#14949)</entry>
+                <entry>Handle multiple MX substitutes (#13498)</entry>
+                <entry>Domains that already exist are protected without route update (#13486)</entry>
+                <entry>POA APS using empty destination in first run (#13500)</entry>
+                <entry>Hide password in settings (#13257)</entry>
+            </version>
+        </changelog>
+        <categories>
+            <category>Collaboration/Email</category>
+        </categories>
+        <languages>
+            <language>en</language>
+        </languages>
+    </presentation>
+
+    <global-settings>
+        <group class="authn">
+            <name>SpamPanel Settings</name>
+            <setting id="spampanel_url" class="access_point" type="string" default-value="" regex="^https?://.*$">
+                <name>Spampanel URL</name>
+                <description>
+                    This is an URL in format &apos;http://www.spampanel.com/&apos; showing where spampanel is installed.
+                    Unless you use a custom CNAME, this is the primary hostname of your first server.
+                </description>
+                <error-message>
+                    Please make sure the text you entered starts with either http:// or https:// (https is preferred)
+                </error-message>
+            </setting>
+        </group>
+        <group>
+            <name>API Settings</name>
+            <setting id="apihost" class="title" type="string" default-value="" min-length="1">
+                <name>API hostname</name>
+                <description>
+                    This is DNS name or IP address of SpamExperts product installation, used for API access.
+                </description>
+            </setting>
+            <setting id="apiuser" class="title" type="string" default-value="admin" min-length="1">
+                <name>API username</name>
+                <description>
+                    This is the username of either the admin or reseller user in the Spampanel appliance.
+                </description>
+                <error-message>
+                    Please make sure the text you entered starts with a letter and continues with either numbers,
+                    letters, underscores or hyphens.
+                </error-message>
+            </setting>
+            <setting id="apipass" class="title" type="password" default-value="" min-length="1">
+                <name>API password</name>
+                <description>
+                    This is the password of either the admin or reseller user in the Spampanel appliance.
+                </description>
+            </setting>
+            <setting id="ssl_enabled" class="title" type="boolean" default-value="true">
+                <name>Enable SSL</name>
+                <description>
+                    If you want to communicate with the spamcluster over SSL, tick this box
+                </description>
+            </setting>
+        </group>
+
+        <group>
+            <name>Virtual MX record</name>
+            <setting id="mx1" class="title" type="string" default-value="" min-length="1">
+                <name>Primary MX</name>
+                <description>
+                    This is the MX record used to deliver to the spamcluster, preferably a Round Robin DNS entry
+                    containing all servers.
+                </description>
+            </setting>
+        </group>
+    </global-settings>
+
+    <patch match="/application/version > '2.0'" recommended="true"/>
+    <upgrade match="/application/version > '1.0'"/>
+
+    <service id="context" class="service">
+        <license must-accept="true">
+            <text>
+                <name>General Terms &amp; Conditions</name>
+                <url>http://gtc.spamexperts.com</url>
+            </text>
+        </license>
+        <presentation>
+            <name>Domain Specific Settings</name>
+            <summary>This part contains all the domain specific settings.</summary>
+            <infolinks>
+                <link class="official" href="http://www.spamexperts.com/">Official site</link>
+                <link class="support" href="https://my.spamexperts.com/supporttickets.php">Support</link>
+                <link class="demo" href="https://demo1.spambrand.com">Online-Demo</link>
+                <link class="deployment-guide" href="https://my.spamexperts.com/kb/709/Parallels-Automation-addon.html">
+                    Deployment Guide
+                </link>
+            </infolinks>
+            <entry-points>
+                <entry dst="{spampanel_url}/bridgelogin.php" method="POST">
+                    <label>Antispam Controlpanel</label>
+                    <variable name="spampanel_url" value-of-setting="spampanel_url"/>
+                    <variable name="domains" value-of-setting="provisioned_domains"/>
+                    <variable name="password" value-of-setting="domain_password"/>
+                    <variable name="interface_enabled" value-of-setting="interface_enabled"/>
+                </entry>
+            </entry-points>
+        </presentation>
+
+        <settings>
+            <setting id="domains" class="domain-name" visibility="hidden" type="list" element-type="string"
+                     track-old-value="true" uniq="owner">
+                <name>List of domains</name>
+                <description>
+                    The domainnames to provision.
+                </description>
+            </setting>
+            <setting id="interface_enabled" type="string" visibility="hidden" default-value="1">
+                <name>Interface enabled</name>
+                <description>
+                    Whether people have access to the webinterface.
+                    When disabled, they will receive a message to contact you to have their product upgraded.
+                </description>
+            </setting>
+            <setting id="num_domains" type="string" visibility="hidden" default-value="0">
+                <name>Amount of domains allowed</name>
+                <description>
+                    The number of domains allowed
+                </description>
+            </setting>
+            <setting id="num_serviceusers" type="string" visibility="hidden" default-value="0">
+                <name>Amount of serviceusers allowed</name>
+                <description>
+                    The number of serviceusers allowed
+                </description>
+            </setting>
+
+            <!-- Products to enable/disable per subscription -->
+            <group class="web">
+                <setting id="service_delivery" type="string" visibility="hidden" track-old-value="true"
+                         default-value="1">
+                    <name>Enable incoming</name>
+                    <description>
+                        Enable the incoming filtering product (delivery) for the domains in this subscription.
+                    </description>
+                </setting>
+
+                <setting id="service_submission" type="string" visibility="hidden" track-old-value="true"
+                         default-value="0">
+                    <name>Enable outgoing</name>
+                    <description>
+                        Enable the outgoing filtering product (submission) for the domains in this subscription.
+                    </description>
+                </setting>
+
+                <setting id="service_archiving" type="string" visibility="hidden" track-old-value="true"
+                         default-value="0">
+                    <name>Enable archiving</name>
+                    <description>
+                        Enable the archiving product for the domains in this subscription.
+                    </description>
+                </setting>
+            </group>
+
+            <group class="authn">
+                <setting id="provisioned_domains" class="value" type="string" protected="true" track-old-value="true"
+                         uniq="owner">
+                    <name>List of domains</name>
+                    <description>
+                        The domainnames to login for.
+                    </description>
+                </setting>
+                <setting id="domain_password" class="password" type="password" visibility="hidden" protected="true"
+                         track-old-value="true" min-length="1">
+                    <name>Password</name>
+                    <description>
+                        This password is being used to login to the antispam control panel.
+                    </description>
+                </setting>
+            </group>
+            <group class="vcard">
+                <group class="email">
+                    <setting id="email" class="value" visibility="hidden" type="email" optional="true">
+                        <name>Your e-mail address</name>
+                        <description>
+                            This email address is being used to send out Protection Reports.
+                            Leave empty to disable enable the reports.
+                        </description>
+                        <error-message>
+                            Please provide a valid email address
+                        </error-message>
+                    </setting>
+                </group>
+            </group>
+        </settings>
+
+        <!-- Define resources -->
+        <resources>
+            <resource id="interface_enabled" class="item" limiting-setting="interface_enabled">
+                <name>Interface enabled</name>
+                <description>Whether the interface is enabled (1) or disabled (0)</description>
+            </resource>
+            <resource id="num_domains" class="item" limiting-setting="num_domains">
+                <name>Number of domains</name>
+                <description>Number of domains created within the application.</description>
+            </resource>
+            <resource id="num_serviceusers" class="item" limiting-setting="num_serviceusers">
+                <name>Number of email users</name>
+                <description>Number of serviceusers created within the application.</description>
+            </resource>
+
+            <!-- Services enabled? Incoming, Outgoijg, Archiving -->
+            <resource id="service_delivery" class="item" limiting-setting="service_delivery">
+                <name>Enable the incoming filtering (delivery) product</name>
+                <description>Whether the incoming filtering is enabled (1) or disabled (0)</description>
+            </resource>
+            <resource id="service_submission" class="item" limiting-setting="service_submission">
+                <name>Enable the outgoing filtering (submission) product</name>
+                <description>Whether the outgoing filtering is enabled (1) or disabled (0)</description>
+            </resource>
+            <resource id="service_archiving" class="item" limiting-setting="service_archiving">
+                <name>Enable the archiving product</name>
+                <description>Whether the archiving is enabled (1) or disabled (0)</description>
+            </resource>
+        </resources>
+
+        <requirements xmlns:php="http://apstandard.com/ns/1/php" xmlns:dns="http://apstandard.com/ns/1/dns">
+            <php:version min="5.2"/>
+            <php:extension>openssl</php:extension>
+            <php:extension>curl</php:extension>
+
+            <!-- Primary Record (Required setting)-->
+            <dns:record>
+                <dns:id>MX1</dns:id>
+                <dns:mx>
+                    <dns:src>
+                        <dns:external value-of-setting="domains"/>
+                    </dns:src>
+                    <dns:priority>10</dns:priority>
+                    <dns:dst>
+                        <dns:external value-of-setting="mx1"/>
+                    </dns:dst>
+                    <dns:substitute/>
+                </dns:mx>
+            </dns:record>
+        </requirements>
+
+        <provision>
+            <configuration-script name="configure.php">
+                <script-language>php</script-language>
+                <status-control/>
+                <structured-output/>
+            </configuration-script>
+
+            <resource-script name="report-resources.php">
+                <script-language>php</script-language>
+            </resource-script>
+            <!--
+                    <backup-script name="backup.php">
+                        <script-language>php</script-language>
+                    </backup-script>
+            -->
+        </provision>
+
+        <!-- Email Level login -->
+        <service id="account" class="account">
+            <presentation>
+                <name>Email Level Account</name>
+                <summary>Email level account service.</summary>
+                <entry-points>
+                    <entry dst="{spampanel_url}/index.php" method="POST">
+                        <label>Spamfilter Email Level</label>
+                        <variable name="spampanel_url" value-of-setting="spampanel_url"/>
+                        <variable name="username" value-of-setting="user_login"/>
+                        <variable name="password" value-of-setting="user_password"/>
+                    </entry>
+                </entry-points>
+            </presentation>
+
+            <settings>
+                <group class="authn">
+                    <setting id="user_login_hidden" class="login" protected="true" type="string" uniq="global"
+                             track-old-value="true" visibility="hidden">
+                        <name>Primary email address</name>
+                    </setting>
+
+                    <setting id="user_login" class="email" protected="true" type="email" uniq="global"
+                             track-old-value="true">
+                        <name>Primary email address</name>
+                    </setting>
+
+                    <setting id="user_password" class="password" protected="true" type="password" track-old-value="true"
+                             min-length="1">
+                        <name>Password</name>
+                    </setting>
+                </group>
+            </settings>
+
+            <!-- Define requirements -->
+            <requirements xmlns:mail="http://apstandard.com/ns/1/mail" xmlns:php="http://apstandard.com/ns/1/php">
+                <php:version min="5.2"/>
+                <php:extension>openssl</php:extension>
+                <php:extension>curl</php:extension>
+                <mail:mailbox>
+                    <mail:id>account</mail:id>
+                    <mail:access>
+                        <mail:pop3/>
+                    </mail:access>
+                    <mail:outgoing>
+                        <mail:smtp/>
+                    </mail:outgoing>
+                </mail:mailbox>
+            </requirements>
+
+            <provision>
+                <configuration-script name="configure-mbox.php">
+                    <script-language>php</script-language>
+                    <structured-output/>
+                </configuration-script>
+            </provision>
+        </service>
+        <!-- End Email Level -->
+    </service>
+</application>

@@ -1,0 +1,92 @@
+#!/usr/bin/php
+<?php
+
+$ver = trim(file_get_contents(__DIR__ . "/private/version.txt"));
+$fileName = "prospamfilter2_pbas";
+
+system("rm -f \"{$fileName}_{$ver}.app.zip\"");
+
+$rel = trim(file_get_contents(__DIR__ . "/private/release.txt"));
+$rel = (int) $rel;
+$rel += 4;
+
+echo "Packaging SpamExperts addon for PBAS version: v.{$ver}.{$rel}\n";
+file_put_contents("private/release.txt", $rel);
+
+// Parralels Business Automation specific packaging tricks. We need to generate us some XML files
+
+// Produce a new APP-META.xml file (template located in /private/)
+date_default_timezone_set('Europe/Bucharest');
+$fc = file_get_contents("private/APP-META.xml");
+$fc = str_replace("{VERSION}", $ver, $fc); //<-- Replace version number
+$fc = str_replace("{RELEASE}", $rel, $fc); //<-- Replace release number
+$fc = str_replace("{BUILT}", date("d-m-Y H:i"), $fc ); //<-- Replace release number
+
+file_put_contents("version.txt", "{$ver}.{$rel}");
+
+$versionfile = "<?php
+class SpamFilter_Version
+{
+    public static function getVersion()
+    {
+        return '{$ver}.{$rel}';
+    }
+}
+";
+file_put_contents("scripts/SpamFilter/Version.php", $versionfile);
+
+$metafile = "APP-META.xml";
+file_put_contents($metafile, $fc);
+unset($fc);
+
+// Produce an APP-LIST.xml which contains filesize + sha256 hash
+$file_output = '';
+$dir_iterator = new RecursiveDirectoryIterator(".");
+$iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::SELF_FIRST);
+
+$skip_files = [
+    'APP-LIST.xml',
+    'package',
+    'codeception.yml',
+    'composer.lock',
+    'composer.json',
+];
+
+foreach ($iterator as $file) {
+    if ($file->isFile()) {
+        $file = str_replace("./", "", $file);
+        if (stristr($file, ".svn")
+            || stristr($file, ".git")
+            || stristr($file, ".zip")
+            || stristr($file, "~")
+            || stristr($file, ".sh")
+            || stristr($file, ".idea")
+            || in_array($file, $skip_files)
+            || stristr($file, "private/")
+            || stristr($file, "tests/")
+            || stristr($file, "vendor/") ) {
+            echo "Skipped file: {$file}\n";
+        } else {
+            #echo "Processing: {$file}\n";
+            $size = filesize( $file );
+            $sha256hash = trim(shell_exec("shasum -a 256 {$file}"));
+            $x = explode(" ", $sha256hash);
+            $hash = $x[0];
+            $file_output .= "<file name=\"{$file}\" size=\"{$size}\" sha256=\"{$hash}\"/>\n";
+        }
+    }
+}
+
+$fc = file_get_contents("private/APP-LIST.xml");
+$fc = str_replace("{FILES}", $file_output, $fc); //<-- Replace all files
+$applist = "APP-LIST.xml";
+file_put_contents($applist, $fc);
+
+unset($skip_files[0]); // remove APP-LISt from zip exclusion
+$skip_files_line = join(" ", $skip_files);
+
+system("zip -9 -r {$fileName}_{$ver}.{$rel}.app.zip * -x *.zip *.php~ {$skip_files_line} private\\* package apslint\\* tests\\* vendor\\*");
+
+echo "Done!\n";
+
+system("aps lint {$fileName}_{$ver}.{$rel}.app.zip");
